@@ -1,14 +1,16 @@
 # gmark
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library for converting back and forth between
+[data.xml](https://github.com/clojure/data.xml)-like data structures
+and a Markdown/Asciidoc-like markup-language.
 
 ## Usage
 
-FIXME
+Don't, yet.
 
 ## License
 
-Copyright © 2015 FIXME
+Copyright © 2015 Joseph Fahey
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
