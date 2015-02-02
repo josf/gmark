@@ -1,6 +1,4 @@
-(ns gmark.core)
+(ns gmark.core
+  (:require [gmark.tei-elems :as t]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(defn to-gmark  [{content :content}] "")
