@@ -1,6 +1,7 @@
 (ns gmark.core-test
   (:require [clojure.test :refer :all]
-            [gmark.core :refer :all]))
+            [gmark.core :refer :all]
+            [gmark.tei-elems :as t]))
 
 
 (def simple-fragment
@@ -15,5 +16,5 @@
 
 
 (deftest test-transform-lg
-  (let [mrk (to-gmark simple-fragment)]
-    (is (= mrk "[n=1] stuff I like to say\n[n=2]I say it every day"))))
+  (let [mrk (to-gmark simple-fragment t/tei)]
+    (is (= mrk "\n\n-stuff I like to say\n-I say it every day\n\n"))))
