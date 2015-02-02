@@ -2,6 +2,7 @@
 
 (defrecord ContainerEType [contains])
 (defrecord ChunkEType [contains line-start])
+(defrecord MultiChunkEType [contains])
                                         
 ;;; no contains: what it can contain is determined by parent type
 (defrecord InnerEType [begin end])      
@@ -10,6 +11,11 @@
 (defprotocol EditableType
   (text-edit-as-child? [etype])
   (can-contain-text? [etype]))
+
+(extend-type MultiChunkEType
+  EditableType
+  (text-edit-as-child? [_] false)
+  (can-contain-text? [_] true))
 
 (extend-type ContainerEType
   EditableType
@@ -40,10 +46,17 @@
   (begin-text [etype] (:begin etype))
   (end-text [etype] (:end etype)))
 
+(extend-type MultiChunkEType
+  TextType
+  (begin-text [_] "\n")
+  (end-text [_] "\n\n"))
+
 (extend-type ChunkEType
   TextType
   (begin-text [etype] (str "\n" (:line-start etype)))
-  (end-text [etype] "\n"))
+  (end-text [etype] (if (pos? (count (:line-start etype)))
+                      ""
+                      "\n")))
 
 (extend-type EmptyEType
   TextType
@@ -51,6 +64,7 @@
   (end-text [_] nil))
 
 (defn container-type [contains] (ContainerEType. contains))
+(defn multi-chunk-type [contains] (MultiChunkEType. contains))
 (defn chunk-type [contains line-start] (ChunkEType. contains line-start))
 (defn inner-type [begin end] (InnerEType. begin end))
 (defn empty-type [sym]  (EmptyEType. sym))
@@ -72,7 +86,7 @@
    :caesura (empty-type "|")
    :rhyme   (inner-type "//" "//")
    :div     (container-type [:div :head :lg])
-   :head    (chunk-type [] "*")
-   :lg      (container-type [:l])
-   :l       (chunk-type [:rhyme :caesura] "-")
+   :head    (chunk-type [:note] "*")
+   :lg      (multi-chunk-type [:l])
+   :l       (chunk-type [:rhyme :caesura :note] "-")
    :note    (inner-type "{" "}")})

@@ -37,4 +37,15 @@
     (is (= nested-note "\n-My {annotated} verse\n"))))
 
 
+(deftest test-multi-chunk-to-text
+  (let [mc {:tag :lg
+            :attrs {}
+            :content [
+                      {:tag :l
+                       :attrs {}
+                       :content ["My verse"]}]}]
+    (is (= (elem-to-text mc tei)
+          "\n\n-My verse\n\n"))))
+
+
 
