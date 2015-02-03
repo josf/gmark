@@ -3,7 +3,8 @@
 (defrecord ContainerEType [contains])
 (defrecord ChunkEType [contains line-start])
 (defrecord MultiChunkEType [contains])
-                                        
+
+
 ;;; no contains: what it can contain is determined by parent type
 (defrecord InnerEType [begin end])      
 (defrecord EmptyEType [sym])
