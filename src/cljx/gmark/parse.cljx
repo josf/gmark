@@ -28,6 +28,9 @@
         (conj accum (str ch))))))
 
 (defn tokenize [string tokens]
+  "tokens is a list of vectors, each containing start and an end
+  string. Both must be present, even if start and end tags are
+  identical."
   (let [tokes (sort-token-groups tokens)]
     (loop [accum []
            s string]
