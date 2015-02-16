@@ -58,35 +58,46 @@
 
 (defn structure [tokenized root token-map]
   (let [token (first tokenized)]
-   (cond
-     (not token)
-     root
+    (cond
+      (not token)
+      root
 
-     (string? token)
-     (structure
-       (next tokenized)
-       (assoc root
-         :content (conj (:content root) token))
-       token-map)
+      (string? token)
+      (structure
+        (next tokenized)
+        (assoc root
+          :content (conj (:content root) token))
+        token-map)
 
-     (and (map? token) (contains? token :type))
-     (let [elem-type (get token-map  (:token token))
-           closing-token (:closing-tag elem-type)]
-       (structure
-         (drop-with-first                 ; avoid the tokens that go to the new element
-           #(and (map? %) (= closing-token (:token %)))
-           (next tokenized))
-         (assoc root                    ; same old root element but...
-           :content
-           (conj                        ;... we append...
-             (:content root)
-             (structure                 ;... the new element that receives
-               (take-while              ; the tokens that precede the next closing tag
-                 #(not
-                    (and (map? %) (= closing-token (:token %))))
-                 (next tokenized))
-               {:tag (:tag elem-type)
-                :attrs {}
-                :content []}
-               token-map)))
-         token-map)))))
+      (and (map? token) (:no-content (get token-map (:token token))))
+      (structure
+        (next tokenized)
+        (assoc root
+          :content (conj
+                     (:content root)
+                     {:tag  (:tag (get token-map (:token token)))
+                      :attrs {}
+                      :content []}))
+        token-map)
+
+      (and (map? token) (contains? token :token) (not (:no-content token)))
+      (let [elem-type (get token-map  (:token token))
+            closing-token (:closing-tag elem-type)]
+        (structure
+          (drop-with-first ; avoid the tokens that go to the new element
+            #(and (map? %) (= closing-token (:token %)))
+            (next tokenized))
+          (assoc root                  ; same old root element but...
+            :content
+            (conj                      ;... we append...
+              (:content root)
+              (structure           ;... the new element that receives
+                (take-while ; the tokens that precede the next closing tag
+                  #(not
+                     (and (map? %) (= closing-token (:token %))))
+                  (next tokenized))
+                {:tag (:tag elem-type)
+                 :attrs {}
+                 :content []}
+                token-map)))
+          token-map)))))
