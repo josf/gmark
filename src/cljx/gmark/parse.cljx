@@ -64,15 +64,29 @@
 
      (string? token)
      (structure
-       (next-tokenized)
+       (next tokenized)
        (assoc root
          :content (conj (:content root) token))
        token-map)
 
      (and (map? token) (contains? token :type))
      (let [elem-type (get token-map  (:token token))
-           new-elem {:tag (:tag elem-type) :attrs {} :content []}]
-      (structure
-        (drop-while #() (next tokenized))
-        ()))
-     )) )
+           closing-token (:closing-tag elem-type)]
+       (structure
+         (drop-with-first                 ; tokens not being fed to new element
+           #(and (map? %) (= closing-token (:token %)))
+           (next tokenized))
+         (assoc root                    ; root element but...
+           :content
+           (conj                        ;... we append...
+             (:content root)
+             (structure                 ;... a new element that receives
+               (take-while              ; the tokens that precede the next closing
+                 #(not
+                    (and (map? %) (= closing-token (:token %))))
+                 (next tokenized))
+               {:tag (:tag elem-type)
+                :attrs {}
+                :content []}
+               token-map)))
+         token-map)))))
