@@ -52,7 +52,7 @@
         (cons (first s) (take-including pred (rest s)))))))
 
 
-(defn drop-after-first [pred coll]
+(defn drop-with-first [pred coll]
   (rest (drop-while (complement pred) coll)))
 
 
