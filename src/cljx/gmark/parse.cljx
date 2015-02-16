@@ -73,15 +73,15 @@
      (let [elem-type (get token-map  (:token token))
            closing-token (:closing-tag elem-type)]
        (structure
-         (drop-with-first                 ; tokens not being fed to new element
+         (drop-with-first                 ; avoid the tokens that go to the new element
            #(and (map? %) (= closing-token (:token %)))
            (next tokenized))
-         (assoc root                    ; root element but...
+         (assoc root                    ; same old root element but...
            :content
            (conj                        ;... we append...
              (:content root)
-             (structure                 ;... a new element that receives
-               (take-while              ; the tokens that precede the next closing
+             (structure                 ;... the new element that receives
+               (take-while              ; the tokens that precede the next closing tag
                  #(not
                     (and (map? %) (= closing-token (:token %))))
                  (next tokenized))
