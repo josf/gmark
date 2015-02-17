@@ -32,9 +32,9 @@
                                    :content ["annotated"]}
                                   " verse"])
                       tei)]
-    (is (= all-text-line "\n-My verse\n"))
-    (is (= nested-cesure "\n-My |cesure\n"))
-    (is (= nested-note "\n-My {annotated} verse\n"))))
+    (is (= all-text-line "\n-My verse"))
+    (is (= nested-cesure "\n-My |cesure"))
+    (is (= nested-note "\n-My {annotated} verse"))))
 
 
 (deftest test-multi-chunk-to-text
