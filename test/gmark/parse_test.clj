@@ -9,3 +9,8 @@
 (deftest test-combined-regex-escaping
   (is (= "(//)|(\\*)|(\\{)|(\\})")
     (combined-regex-pattern ["//" "*" "{" "}"])))
+
+(deftest tokenize-simple
+  (is (=
+        (tokenize "the //stuff// we like")
+        ["the " {:token "//" :type :either} "stuff" {:token "//" :type :either} " we like"])))
