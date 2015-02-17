@@ -13,4 +13,10 @@
        {:token "}}" :type :end}])))
 
 
+(deftest match-by-length-test
+  (is (map? (match-by-length "//blah" ["//" "//"]))))
+
+(deftest match-by-length-test-neg
+  (is (nil? (match-by-length "blah//" ["//" "//"]))))
+
 
