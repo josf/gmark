@@ -40,21 +40,8 @@
           (recur (conj accum match) (subs s (count (:token match))))
           (recur (char-to-accum (first s) accum) (subs s 1)))))))
 
-
-(defn take-including [pred coll]
-  "Like take-while, but returns lazy seq of all elements in coll
-  including the first match with pred, but none after the matching
-  element. With no matches, returns entire coll as seq."
-  (lazy-seq
-    (when-let [s (seq coll)]
-      (if (pred (first s))
-        (take 1 s)
-        (cons (first s) (take-including pred (rest s)))))))
-
-
 (defn drop-with-first [pred coll]
   (rest (drop-while (complement pred) coll)))
-
 
 (defn structure [tokenized root token-map]
   (let [token (first tokenized)]
