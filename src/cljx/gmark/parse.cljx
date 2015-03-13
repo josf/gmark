@@ -5,14 +5,20 @@
 (defn sort-token-groups [token-pairs]
   (reverse (sort-by #(count (first %)) token-pairs)))
 
+
+
 (defn match-by-length [string [token-begin token-end]]
+  "Matches either token-begin or token-end against string. Matching is
+  length based in that if a token is n chars long, we just match
+  against the first n chars in string. End tokens match only if they
+  occur at the end of the string."
   (let [same-toks (= token-begin token-end)]
     (cond
       (and (>= (count string) (count token-begin))
         (= token-begin (subs string 0 (count token-begin))))
       {:token token-begin :type (if same-toks :either :begin)}
 
-      (and (>= (count string) (count token-end))
+      (and (>= (count (str/trim string)) (count token-end))
         (= token-end (subs string 0 (count token-end))))
       {:token token-end :type :end}
       

@@ -12,9 +12,11 @@
        {:token "//" :type :either} " we " {:token "{{" :type :begin} "like"
        {:token "}}" :type :end}])))
 
-
 (deftest match-by-length-test
-  (is (map? (match-by-length "//blah" ["//" "//"]))))
+  (is (map? (match-by-length "//blah" ["//" "//"])))
+  (is (map? (match-by-length "//blah " ["//" "//"])))
+  (is (map? (match-by-length "{{blah}}" ["{{" "}}"])))
+  (is (map? (match-by-length "{{blah}} " ["{{" "}}"]))))
 
 (deftest match-by-length-test-neg
   (is (nil? (match-by-length "blah//" ["//" "//"]))))
