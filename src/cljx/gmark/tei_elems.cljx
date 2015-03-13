@@ -70,6 +70,30 @@
 (defn inner-type [begin end] (InnerEType. begin end))
 (defn empty-type [sym]  (EmptyEType. sym))
 
+
+(defn tagtypes [description-map]
+  "Define tagtypes from general tag description map. The tag
+  description is a map of maps where each type looks something 
+  like this:
+
+:rhyme {:type :inner
+        :contains []
+        :begin-token \"??\"
+        :end-token \"??\"}
+"
+  (->>
+    description-map
+    (map
+     (fn [[elem-name descrip]]
+       [elem-name
+        (case (:type descrip)
+          :container (container-type (:contains descrip))
+          :multi-chunk (multi-chunk-type (:contains descrip))
+          :chunk (chunk-type (:contains descrip) (:line-token "-"))
+          :inner (inner-type (:begin-token descrip) (:end-token descrip))
+          :empty (empty-type (:begin-token descrip)))]))
+    (into {})))
+
 (defn elem-to-text [elem tagtypes]
   (let [etype ((:tag elem) tagtypes)
         content (:content elem)]

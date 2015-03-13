@@ -48,4 +48,13 @@
           "\n\n-My verse\n\n"))))
 
 
-
+(deftest test-description-to-tagtypes
+  (let [tt (tagtypes {:body {:type :container
+                             :contains [:div]}
+                      :rhyme {:type :inner
+                              :contains []
+                              :begin-token "\\"
+                              :end-token "\\"}})]
+    (is (map? tt))
+    (is (contains? tt :body))
+    (is (contains? tt :rhyme))))
