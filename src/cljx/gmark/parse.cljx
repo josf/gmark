@@ -7,6 +7,18 @@
 
 
 
+(defn tokens-from-token-map [token-map]
+  "Given the token-map (used by the structure function), return a
+  vector of start/end pairs for tokenizing"
+  (mapv
+    (fn [[start-token info]]
+      [start-token
+       (if (:no-content info)
+         start-token
+         (:closing-tag info))])
+    token-map))
+
+
 (defn match-by-length [string [token-begin token-end]]
   "Matches either token-begin or token-end against string. Matching is
   length based in that if a token is n chars long, we just match

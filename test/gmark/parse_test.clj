@@ -2,6 +2,16 @@
   (:require [clojure.test :refer :all]
             [gmark.parse :refer :all]))
 
+
+(deftest tokens-from-token-map-basic
+  (let [token-map  {"//" {:tag :em
+                          :closing-tag "//"}
+                    "{{" {:tag :strong
+                          :closing-tag "}}"}}
+         result (tokens-from-token-map token-map)] 
+    (is (some #(= % ["//" "//"]) result))
+    (is (some #(= % ["{{" "}}"]) result))))
+
 (deftest tokenize-simple
   (is (=
         (tokenize "the //stuff// we like"  [["//" "//"]])
