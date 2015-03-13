@@ -115,3 +115,54 @@
                  :content []}
                 token-map)))
           token-map)))))
+
+
+(defn parse-chunk [text token-map root]
+  (structure
+    (tokenize text (tokens-from-token-map token-map))
+    root
+    token-map))
+
+(defn chunking-regex [line-starts]
+  (re-pattern
+    (apply str
+      (interpose
+        "|"
+        (conj (map #(str "(?=\\n" % "\\s+)") line-starts) "\n\n")))))
+
+(defn chunk-group-tokenize [text line-starts]
+  (map str/trim
+   (if (empty? line-starts)
+     (str/split text #"\n\n")
+     (str/split text (chunking-regex line-starts)))))
+
+
+(defn identify-chunk-type [chunk sorted-line-end-pairs]
+  (first
+    (keep
+      (fn [[line-end elem-kw]]
+        (when
+         (and
+           (> (count chunk) (count line-end))
+           (=
+             (str line-end " ")
+             (subs chunk 0 (inc (count line-end)))))
+         elem-kw))
+      sorted-line-end-pairs)))
+
+(defn parse-chunk-group [parent text line-starts-elems token-map]
+  "line-starts-elems is a map of line-start strings to element type
+  keywords."
+  (let [sorted-line-end-pairs (sort-token-groups (seq line-starts-elems))]
+   (assoc parent
+     :content
+     (mapv
+
+       (fn [chunk]
+         (let [chunk-tag (identify-chunk-type chunk sorted-line-end-pairs)]
+           (parse-chunk
+             chunk
+             token-map
+             {:tag chunk-tag :attrs {} :content []})))
+
+       (chunk-group-tokenize text (keys line-starts-elems))))))

@@ -50,3 +50,55 @@
     (is (= {:tag :caesura :attrs {} :content []}
           (nth (:content structured) 3)))
     (is (= " do" (last (:content structured))))))
+
+
+(deftest chunking-regex-test
+  (let [txt "- line one\n- line two\n- line three"
+        cregex (chunking-regex ["-"])
+        chunked (re-find cregex txt)]
+    (is (not (nil? chunked)))))
+
+(deftest chunk-group-tokenize-simple-test
+  (let [txt  "- line one\n- line two\n- line three"
+        chunked (chunk-group-tokenize txt ["-"])]
+    (is (= 3 (count chunked)))
+    (is (= (first chunked) "- line one"))
+    (is (= (nth chunked 2) "- line three"))))
+
+(deftest chunk-group-tokenize-inner-line-break-test
+  (let [
+        ;; inner line break: no effect
+        txt  "- line one\n- line\n two\n- line three"
+
+        ;; double inner line break: paragraph logic kicks in
+        txt2 "- line one\n- line\n\n two\n- line three"
+
+        ;; double line breaks between groups: is this desirable?
+        ;; in multi-chunk context
+        txt3 "- line one\n\n- line two\n- line three"
+        chunked (chunk-group-tokenize txt ["-"])
+        chunked2 (chunk-group-tokenize txt2 ["-"])
+        chunked3 (chunk-group-tokenize txt3 ["-"])]
+    (is (= 3 (count chunked)))
+    (is (= (first chunked) "- line one"))
+    (is (= (nth chunked 2) "- line three"))
+    (is (= 4 (count chunked2)))
+    (is (= 3 (count chunked3)))
+    (is (= (second chunked3) "- line two"))))
+
+(deftest identify-chunk-type-test
+  (is :l (identify-chunk-type "- bloop" [["-" :l]]))
+  (is :l (identify-chunk-type "- bloop" [["**" :head] ["-" :l]]))
+  (is :head (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
+
+(deftest parse-chunk-group-simple-test
+  (let [parent {:tag :bogus :attrs {} :content []}
+        text "- line //one//\n- line two\n- line three"
+        line-starts-elems {"-" :l}
+        token-map {"//" {:tag :rhyme :closing-tag "//"}}
+        parsed (parse-chunk-group parent text line-starts-elems token-map)]
+    (is (map? parsed))
+    (is (= :l (:tag (first (:content parsed)))))
+    (is (= :rhyme (:tag (second (:content (first (:content parsed)))))))))
+
+; "\*\*" :head
