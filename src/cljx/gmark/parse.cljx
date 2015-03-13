@@ -6,6 +6,15 @@
   (reverse (sort-by #(count (first %)) token-pairs)))
 
 
+;;; token-map structure
+
+;;; Basic config:
+;;; 
+;;; { opening-tag
+;;;  {:tag tag-keyword :closing-tag closing-tag}}
+;;; 
+;;;  opening-tag and closing-tags are strings, ie. "{{" and "}}"
+;;; 
 
 (defn tokens-from-token-map [token-map]
   "Given the token-map (used by the structure function), return a
