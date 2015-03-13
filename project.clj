@@ -8,7 +8,7 @@
   :plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
             [lein-cljsbuild "1.0.3"]]
 
-
+  :test-paths ["test" "target/classes"]
   :cljsbuild {:builds
               {:app
                {:source-paths ["src"]
