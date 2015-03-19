@@ -94,16 +94,37 @@
           :empty (empty-type (:begin-token descrip)))]))
     (into {})))
 
-(defn elem-to-text [elem tagtypes]
-  (let [etype ((:tag elem) tagtypes)
-        content (:content elem)]
-    (str (begin-text etype)
-     (apply str (map
-                  #(if (string? %)
-                     %
-                     (elem-to-text % tagtypes))
-                  content))
-      (end-text etype))))
+
+(defn elem-to-text
+  [elem tagtypes]
+  (if (string? elem)
+    elem
+    (let [etype ((:tag elem) tagtypes)
+          content (:content elem)]
+      (if (= :empty (:type etype))
+        (:begin-token etype)
+        (str (:begin-token etype)
+          (apply str (map
+                       #(if (string? %)
+                          %
+                          (elem-to-text % tagtypes))
+                       content))
+          (:end-token etype))))))
+
+(defn chunk-to-text [elem tagtypes]
+  (let [token (or
+                (get-in tagtypes [(:tag elem) :line-token])
+                "\n")]                  ; extra \n for bare paragraphs
+    (str "\n" token " "
+      (apply str (map #(elem-to-text % tagtypes) (:content elem))))))
+
+
+(defn multi-chunk-to-text [elem tagtypes]
+  (str "\n"
+    (apply str (map #(chunk-to-text % tagtypes) (:content elem)))
+    "\n"))
+
+
 
 (def tei
   {:body    (container-type [:div])
