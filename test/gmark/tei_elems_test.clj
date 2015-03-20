@@ -14,7 +14,7 @@
   (let [tt {:caesura {:type :empty
                       :begin-token "|"
                       :end-token "|"}}]
-    (is (= "|" (elem-to-text {:tag :caesura :attrs {} :content []} tt)))))
+    (is (= "|" (inner-to-text {:tag :caesura :attrs {} :content []} tt)))))
 
 (deftest inner-elements
   (let [tt {:caesura {:type :empty
@@ -24,11 +24,11 @@
                     :begin-token "//"
                     :end-token "//"}}
         txt-w-cesure  (apply str
-                        (map #(elem-to-text % tt)
+                        (map #(inner-to-text % tt)
                           ["my "
                            {:tag :caesura :attrs {} :content []}
                            "verse"]))
-        nested-note (elem-to-text
+        nested-note (inner-to-text
                       {:tag :lg
                        :attrs {}
                        :content ["My "

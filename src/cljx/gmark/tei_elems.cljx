@@ -95,7 +95,7 @@
     (into {})))
 
 
-(defn elem-to-text
+(defn inner-to-text
   [elem tagtypes]
   (if (string? elem)
     elem
@@ -107,7 +107,7 @@
           (apply str (map
                        #(if (string? %)
                           %
-                          (elem-to-text % tagtypes))
+                          (inner-to-text % tagtypes))
                        content))
           (:end-token etype))))))
 
@@ -116,7 +116,7 @@
                 (get-in tagtypes [(:tag elem) :line-token])
                 "\n")]                  ; extra \n for bare paragraphs
     (str "\n" token " "
-      (apply str (map #(elem-to-text % tagtypes) (:content elem))))))
+      (apply str (map #(inner-to-text % tagtypes) (:content elem))))))
 
 
 (defn multi-chunk-to-text [elem tagtypes]
