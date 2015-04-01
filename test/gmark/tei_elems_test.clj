@@ -47,19 +47,21 @@
   "output gmarkup from l (verse line) element"
   (let [base-elem {:tag :l
                    :attrs {}
-                   :content []}
-        nested-cesure (chunk-to-text
-                        (assoc base-elem
-                          :content ["My "
-                                    {:tag :caesura :attrs {} :content []}
-                                    "cesure"])
-                        {:l {:type :chunk
+                   :content ["My "
+                             {:tag :caesura :attrs {} :content []}
+                             "cesure"]}
+        tt  {:l {:type :chunk
                              :line-token "-"}
                          :lg {:type :multi-chunk}
                          :caesura {:type :empty
                                    :begin-token "|"
-                                   :end-token "|"}})]
-    (is (= nested-cesure "\n- My |cesure") "Insert empty sub tag")))
+                                   :end-token "|"}}
+        nested-cesure (chunk-to-text base-elem tt true)
+        nested-cesure-2 (chunk-to-text base-elem tt)]
+    (is (= nested-cesure "\n- My |cesure")
+      "Insert empty sub tag (from multi-chunk)")
+    (is (= nested-cesure-2 "My |cesure")
+      "Insert empty sub tag (not from multi-chunk)")))
 
 
 (deftest test-multi-chunk-to-text
@@ -86,3 +88,21 @@
     (is (map? tt))
     (is (contains? tt :body))
     (is (contains? tt :rhyme))))
+
+
+(deftest elem-to-text-test
+  (let [tt {:lg {:type :multi-chunk}
+            :l {:type :chunk
+                :line-token "-"}
+            :caesura {:type :empty
+                      :begin-token "|"
+                      :end-token "|"}
+            :note {:type :inner
+                   :begin-token "{"
+                   :end-token "}"}
+            :rhyme {:type :inner
+                    :begin-token "//"
+                    :end-token "//"}}]
+    (is (= "strang" (elem-to-text "strang" tt)) "text is just text")
+    (is (= "my verse" (elem-to-text {:tag :l :attrs {} :content ["my verse"]} tt))
+      "Chunk with just text content")))

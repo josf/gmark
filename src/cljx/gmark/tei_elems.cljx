@@ -111,19 +111,38 @@
                        content))
           (:end-token etype))))))
 
-(defn chunk-to-text [elem tagtypes]
-  (let [token (or
-                (get-in tagtypes [(:tag elem) :line-token])
-                "\n")]                  ; extra \n for bare paragraphs
-    (str "\n" token " "
-      (apply str (map #(inner-to-text % tagtypes) (:content elem))))))
+(defn chunk-to-text
+  "from-multi? arg determines whether the chunk has a parent element
+  or not. If not, there is no line end prefix."
+  ([elem tagtypes] (chunk-to-text elem tagtypes nil))
+  ([elem tagtypes from-multi?]
+   (let [token (when from-multi?
+                 (str "\n"
+                  (or
+                    (get-in tagtypes [(:tag elem) :line-token])
+                    "\n")            ; extra \n for bare paragraphs
+                  " "))]                ; space after line-token
+     (str token
+       (apply str (map #(inner-to-text % tagtypes) (:content elem)))))))
 
 
 (defn multi-chunk-to-text [elem tagtypes]
   (str "\n"
-    (apply str (map #(chunk-to-text % tagtypes) (:content elem)))
+    (apply str (map #(chunk-to-text % tagtypes true) (:content elem)))
     "\n"))
 
+(defn elem-to-text [elem tagtypes]
+  (if (string? elem)
+    elem
+    (case (get-in tagtypes [(:tag elem) :type])
+      :inner
+      (inner-to-text elem tagtypes)
+      :empty
+      (inner-to-text elem tagtypes)
+      :chunk
+      (chunk-to-text elem tagtypes)
+      :multi-chunk
+      (multi-chunk-to-text elem tagtypes))))
 
 
 (def tei
