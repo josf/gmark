@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/clojurescript "0.0-2371" :scope "provided"]]
+                 [org.clojure/clojurescript "0.0-3169" :scope "provided"]]
   :plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
             [lein-cljsbuild "1.0.3"]]
 
@@ -23,7 +23,7 @@
                                   :compiler
                                   {:optimizations :none
                                    :pretty-print false}}}}}
-             :dev {:plugins [[com.keminglabs/cljx "0.5.0"]]}}
+             :dev {:plugins [[com.keminglabs/cljx "0.6.0"]]}}
 
   :cljx {:builds [{:source-paths ["src/cljx"]
                    :output-path "target/classes"
