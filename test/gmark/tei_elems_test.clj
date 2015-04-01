@@ -105,4 +105,16 @@
                     :end-token "//"}}]
     (is (= "strang" (elem-to-text "strang" tt)) "text is just text")
     (is (= "my verse" (elem-to-text {:tag :l :attrs {} :content ["my verse"]} tt))
-      "Chunk with just text content")))
+      "Chunk with just text content")
+    (is (= "\n- my verse\n- more verse")
+      (elem-to-text
+        {:tag :lg
+         :attrs {}
+         :content
+         [{:tag :l
+           :attrs {}
+           :content ["my verse"]}
+          {:tag :l
+           :attrs {}
+           :content ["more verse"]}]}
+        tt))))

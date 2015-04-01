@@ -132,17 +132,42 @@
     "\n"))
 
 (defn elem-to-text [elem tagtypes]
-  (if (string? elem)
-    elem
-    (case (get-in tagtypes [(:tag elem) :type])
-      :inner
-      (inner-to-text elem tagtypes)
-      :empty
-      (inner-to-text elem tagtypes)
-      :chunk
-      (chunk-to-text elem tagtypes)
-      :multi-chunk
-      (multi-chunk-to-text elem tagtypes))))
+  (cond
+    (nil? elem)  nil
+    (string? elem) elem
+    
+    (map? elem)
+    (let [etype (get-in tagtypes [(:tag elem) :type])]
+      (cond
+        (or (= etype :inner) (= etype :empty))
+        (inner-to-text elem tagtypes)
+
+        (= etype :chunk)
+        (chunk-to-text elem tagtypes)
+
+        (= etype :multi-chunk)
+        (multi-chunk-to-text elem tagtypes)
+
+        (= etype :container)
+        (throw
+          (#+cljs js/Error.
+           #+clj IllegalArgumentException.
+            "container elements cannot be rendered as text"))
+
+        (nil? etype)
+        (throw (#+cljs js/Error.
+                #+clj IllegalArgumentException.
+                (str "Strange arg. Tag is " (:tag elem))))
+
+        true
+        (throw
+          #+cljs (js/Error. (str "No match " etype))
+          #+clj (IllegalArgumentException. (str "No match " etype)))))
+
+    true
+    (throw
+      (#+cljs js/Error. #+clj IllegalArgumentException.
+        (str "unknown type: " (type elem))))))
 
 
 (def tei
