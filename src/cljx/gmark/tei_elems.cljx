@@ -116,6 +116,7 @@
                  (:content elem)))
     (end-text etype)))
 
+(declare elem-to-text)
 (defn chunk-to-text
   [etype elem tagtypes]
   (str (apply str (map #(elem-to-text % tagtypes) (:content elem)))))
