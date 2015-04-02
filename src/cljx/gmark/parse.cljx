@@ -162,13 +162,17 @@
 (defn parse-chunk-group [parent text line-starts-elems token-map]
   "line-starts-elems is a map of line-start strings to element type
   keywords."
-  (let [sorted-line-end-pairs (sort-token-groups (seq line-starts-elems))]
+  (let [sorted-line-end-pairs (sort-token-groups line-starts-elems)]
    (assoc parent
      :content
      (mapv
 
        (fn [chunk]
          (let [chunk-tag (identify-chunk-type chunk sorted-line-end-pairs)]
+           (when (nil? chunk-tag)
+             (throw (#+clj IllegalStateException.
+                      #+cljs js/Error.
+                      (str "null chunk-tag: " (apply str sorted-line-end-pairs)))))
            (parse-chunk
              chunk
              token-map
