@@ -1,6 +1,7 @@
 (ns gmark.tei-elems-test
   (:require [clojure.test :refer :all]
-            [gmark.tei-elems :refer :all]))
+            [gmark.tei-elems :refer :all])
+  (:import [gmark.tei_elems ChunkEType MultiChunkEType ContainerEType InnerEType EmptyEType]))
 
 
 (deftest test-basic-protocol-setup
@@ -100,3 +101,25 @@
            :attrs {}
            :content ["more verse"]}]}
         tt))))
+
+
+(deftest chunk-line-starts-types-test
+  (let [st (chunk-line-starts-types
+             {:l (chunk-type  [:note] "-")
+              :lg (multi-chunk-type [:l])})]
+    (is (map? st))
+    (is (= 1 (count st)) "Should be exactly one type left")
+    (is (= :l (get st "-")))))
+
+
+(deftest tagtyptes-to-token-map-test
+  (let [tt {:l (chunk-type [:caesura] "-")
+            :lg (multi-chunk-type [:l])
+            :caesura (empty-type "|")
+            :note (inner-type "{" "}")
+            :rhyme (inner-type "//" "//")}
+        tm (tagtypes-to-token-map tt)]
+    (is (map? tm))
+    (is (= :caesura (:tag (get tm "|"))) "values are maps (empty type)")
+    (is (= :rhyme (:tag (get tm "//"))) "values are maps (inner type)")
+    (is (= :note (:tag (get tm "{"))) "tag values are present")))
