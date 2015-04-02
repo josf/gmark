@@ -84,7 +84,7 @@
   (case (:type tagdesc)
     :container (container-type (:contains tagdesc))
     :multi-chunk (multi-chunk-type (:contains tagdesc))
-    :chunk (chunk-type (:contains tagdesc) (:line-token "-"))
+    :chunk (chunk-type (:contains tagdesc) (:line-token tagdesc))
     :inner (inner-type (:begin-token tagdesc) (:end-token tagdesc))
     :empty (empty-type (:begin-token tagdesc))))
 
