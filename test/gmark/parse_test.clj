@@ -52,6 +52,11 @@
     (is (= " do" (last (:content structured))))))
 
 
+(deftest regex-cleaning
+  (is (= "\\*\\*" (pre-clean-regex "**")))
+  (is (= "\\." (pre-clean-regex ".")))
+  (is (= "\\?" (pre-clean-regex "?"))))
+
 (deftest chunking-regex-test
   (let [txt "- line one\n- line two\n- line three"
         cregex (chunking-regex ["-"])

@@ -125,7 +125,7 @@
 
 (defn pre-clean-regex [reg-str]
   "Escape regex characters"
-  (str/replace reg-str #"([.\*])" "\\\\$1"))
+  (str/replace reg-str #"([.\*?])" "\\\\$1"))
 
 (defn chunking-regex [line-starts]
   (re-pattern
