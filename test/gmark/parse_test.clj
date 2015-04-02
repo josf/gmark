@@ -94,7 +94,7 @@
 (deftest parse-chunk-group-simple-test
   (let [parent {:tag :bogus :attrs {} :content []}
         text "- line //one//\n- line two\n- line three"
-        line-starts-elems {"-" :l}
+        line-starts-elems {"-" {:tag  :l}}
         token-map {"//" {:tag :rhyme :closing-tag "//"}}
         parsed (parse-chunk-group parent text line-starts-elems token-map)]
     (is (map? parsed))
