@@ -42,13 +42,22 @@
   (end-text [etype])
   (to-gmark [etype elem tagtypes]))
 
+(defprotocol SubChunkType
+  (as-token-mapval [etype tag]))
+
 (declare inner-to-text chunk-to-text multi-chunk-to-text)
+
+
 
 (extend-type InnerEType
   TextType
   (begin-text [etype] (:begin etype))
   (end-text [etype] (:end etype))
-  (to-gmark [etype elem tagtypes] (inner-to-text etype elem tagtypes)))
+  (to-gmark [etype elem tagtypes] (inner-to-text etype elem tagtypes))
+  SubChunkType
+  (as-token-mapval [etype tag] [(begin-text etype)
+                                {:tag tag
+                                 :closing-tag (end-text etype)}]))
 
 (extend-type MultiChunkEType
   TextType
@@ -68,7 +77,11 @@
   TextType
   (begin-text [etype] (:sym etype))
   (end-text [_] nil)
-  (to-gmark [etype elem _] (begin-text etype)))
+  (to-gmark [etype elem _] (begin-text etype))
+  SubChunkType
+  (as-token-mapval [etype tag] [(begin-text etype)
+                                {:tag tag
+                                 :no-content true}]))
 
 (defn container-type [contains] (ContainerEType. contains))
 (defn multi-chunk-type [contains] (MultiChunkEType. contains))
@@ -105,6 +118,27 @@
        [elem-name (tagdesc-to-type descrip)]))
     (into {})))
 
+(defn chunk-line-starts-types [tagtypes]
+  "Given a tagtypes map (ie. tags mapped to element type records),
+returns a map, where keys are line start strings and values are
+element types. This is a map to be used when parsing multi-chunk
+elements. "
+  (->> tagtypes
+    (filter (fn [[_ etype]]
+              (instance? ChunkEType etype)))
+    (map (fn [[tag etype]]
+           [(:line-start etype) tag]))
+    (into {})))
+
+
+(defn tagtypes-to-token-map [tagtypes]
+  (->>
+    tagtypes
+    (filter (fn [[tag etype]]
+              (or (instance? InnerEType etype)
+                (instance? EmptyEType etype))))
+    (map (fn [[tag etype]] (as-token-mapval etype tag)))
+    (into {})))
 
 (defn inner-to-text
   [etype elem tagtypes]
