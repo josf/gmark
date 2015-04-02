@@ -123,14 +123,23 @@
     root
     token-map))
 
+(defn pre-clean-regex [reg-str]
+  "Escape regex characters"
+  (str/replace reg-str #"([.\*])" "\\\\$1"))
+
 (defn chunking-regex [line-starts]
   (re-pattern
     (apply str
       (interpose
         "|"
-        (conj (map #(str "(?=\\n" % "\\s+)") line-starts) "\n\n")))))
+        (conj
+          (map #(str "(?=\\n" (pre-clean-regex %) "\\s+)") line-starts)
+          "\n\n")))))
 
 (defn chunk-group-tokenize [text line-starts]
+  "line-starts is a list of possible line beginning marker
+  strings. With an empty list, defaults to '\n\n', meaning simple
+  paragraphs."
   (map str/trim
    (if (empty? line-starts)
      (str/split text #"\n\n")
