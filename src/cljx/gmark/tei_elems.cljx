@@ -4,7 +4,6 @@
 (defrecord ChunkEType [contains line-start])
 (defrecord MultiChunkEType [contains])
 
-
 ;;; no contains: what it can contain is determined by parent type
 (defrecord InnerEType [begin end])      
 (defrecord EmptyEType [sym])
@@ -40,29 +39,36 @@
 
 (defprotocol TextType
   (begin-text [etype])
-  (end-text [etype]))
+  (end-text [etype])
+  (to-gmark [etype elem tagtypes]))
+
+(declare inner-to-text chunk-to-text multi-chunk-to-text)
 
 (extend-type InnerEType
   TextType
   (begin-text [etype] (:begin etype))
-  (end-text [etype] (:end etype)))
+  (end-text [etype] (:end etype))
+  (to-gmark [etype elem tagtypes] (inner-to-text etype elem tagtypes)))
 
 (extend-type MultiChunkEType
   TextType
   (begin-text [_] "\n")
-  (end-text [_] "\n\n"))
+  (end-text [_] "\n\n")
+  (to-gmark [etype elem tagtypes] (multi-chunk-to-text etype elem tagtypes)))
 
 (extend-type ChunkEType
   TextType
-  (begin-text [etype] (str "\n" (:line-start etype)))
+  (begin-text [etype] (str "\n" (:line-start etype) " "))
   (end-text [etype] (if (pos? (count (:line-start etype)))
                       ""
-                      "\n")))
+                      "\n"))
+  (to-gmark [etype elem tagtypes] (chunk-to-text etype elem tagtypes)))
 
 (extend-type EmptyEType
   TextType
   (begin-text [etype] (:sym etype))
-  (end-text [_] nil))
+  (end-text [_] nil)
+  (to-gmark [etype elem _] (begin-text etype)))
 
 (defn container-type [contains] (ContainerEType. contains))
 (defn multi-chunk-type [contains] (MultiChunkEType. contains))
@@ -70,6 +76,17 @@
 (defn inner-type [begin end] (InnerEType. begin end))
 (defn empty-type [sym]  (EmptyEType. sym))
 
+
+(defn tagdesc-to-type [tagdesc]
+  "Takes a map describing an element type and returns the correct type
+  of Record."
+  {:pre [(map? tagdesc)]}
+  (case (:type tagdesc)
+    :container (container-type (:contains tagdesc))
+    :multi-chunk (multi-chunk-type (:contains tagdesc))
+    :chunk (chunk-type (:contains tagdesc) (:line-token "-"))
+    :inner (inner-type (:begin-token tagdesc) (:end-token tagdesc))
+    :empty (empty-type (:begin-token tagdesc))))
 
 (defn tagtypes [description-map]
   "Define tagtypes from general tag description map. The tag
@@ -85,84 +102,49 @@
     description-map
     (map
      (fn [[elem-name descrip]]
-       [elem-name
-        (case (:type descrip)
-          :container (container-type (:contains descrip))
-          :multi-chunk (multi-chunk-type (:contains descrip))
-          :chunk (chunk-type (:contains descrip) (:line-token "-"))
-          :inner (inner-type (:begin-token descrip) (:end-token descrip))
-          :empty (empty-type (:begin-token descrip)))]))
+       [elem-name (tagdesc-to-type descrip)]))
     (into {})))
 
 
 (defn inner-to-text
-  [elem tagtypes]
-  (if (string? elem)
-    elem
-    (let [etype ((:tag elem) tagtypes)
-          content (:content elem)]
-      (if (= :empty (:type etype))
-        (:begin-token etype)
-        (str (:begin-token etype)
-          (apply str (map
-                       #(if (string? %)
-                          %
-                          (inner-to-text % tagtypes))
-                       content))
-          (:end-token etype))))))
+  [etype elem tagtypes]
+  (str (begin-text etype)
+    (apply str (map
+                 #(if (string? %)
+                    %
+                    (inner-to-text % tagtypes))
+                 (:content elem)))
+    (end-text etype)))
 
 (defn chunk-to-text
-  "from-multi? arg determines whether the chunk has a parent element
-  or not. If not, there is no line end prefix."
-  ([elem tagtypes] (chunk-to-text elem tagtypes nil))
-  ([elem tagtypes from-multi?]
-   (let [token (when from-multi?
-                 (str "\n"
-                  (or
-                    (get-in tagtypes [(:tag elem) :line-token])
-                    "\n")            ; extra \n for bare paragraphs
-                  " "))]                ; space after line-token
-     (str token
-       (apply str (map #(inner-to-text % tagtypes) (:content elem)))))))
+  [etype elem tagtypes]
+  (str (apply str (map #(elem-to-text % tagtypes) (:content elem)))))
 
+(defn child-chunk-to-text
+  "To be called when parsing a multi-chunk. This function is different
+  from the others because we don't know the type yet."
+  [elem tagtypes]
+  (let [etype ((:tag elem) tagtypes)]
+    (str (begin-text etype) (chunk-to-text etype elem tagtypes) "\n")))
 
-(defn multi-chunk-to-text [elem tagtypes]
+(defn multi-chunk-to-text [etype elem tagtypes]
   (str "\n"
-    (apply str (map #(chunk-to-text % tagtypes true) (:content elem)))
+    (apply str (map #(child-chunk-to-text % tagtypes) (:content elem)))
     "\n"))
 
 (defn elem-to-text [elem tagtypes]
   (cond
     (nil? elem)  nil
     (string? elem) elem
-    
-    (map? elem)
-    (let [etype (get-in tagtypes [(:tag elem) :type])]
-      (cond
-        (or (= etype :inner) (= etype :empty))
-        (inner-to-text elem tagtypes)
 
-        (= etype :chunk)
-        (chunk-to-text elem tagtypes)
+    ;; TODO all of this logic needs to use MultiChunkEType, InnerEType etc.)
+    (contains? tagtypes (:tag elem))
+    (let [elem-type ((:tag elem) tagtypes)]
 
-        (= etype :multi-chunk)
-        (multi-chunk-to-text elem tagtypes)
-
-        (= etype :container)
-        (throw
-          (#+cljs js/Error.
-           #+clj IllegalArgumentException.
-            "container elements cannot be rendered as text"))
-
-        (nil? etype)
-        (throw (#+cljs js/Error.
-                #+clj IllegalArgumentException.
-                (str "Strange arg. Tag is " (:tag elem))))
-
-        true
-        (throw
-          #+cljs (js/Error. (str "No match " etype))
-          #+clj (IllegalArgumentException. (str "No match " etype)))))
+      ;; TODO this is a mess! Should the element itself be an
+      ;; additional argument to the to-gmark methods? Or should
+      ;; elements "know" what kind of tagtype they are? THINK, man!
+      (to-gmark elem-type elem tagtypes))
 
     true
     (throw

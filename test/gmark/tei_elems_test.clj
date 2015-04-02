@@ -11,37 +11,21 @@
 
 
 (deftest empty-elements
-  (let [tt {:caesura {:type :empty
-                      :begin-token "|"
-                      :end-token "|"}}]
-    (is (= "|" (inner-to-text {:tag :caesura :attrs {} :content []} tt)))))
+  (let [tt  {:caesura (empty-type "|")}]
+    (is (= "|" (elem-to-text {:tag :caesura :attrs {} :content []} tt)))))
 
 (deftest inner-elements
-  (let [tt {:caesura {:type :empty
-                      :begin-token "|"
-                      :end-token "|"}
-            :rhyme {:type :inner
-                    :begin-token "//"
-                    :end-token "//"}}
+  (let [tt {:caesura (empty-type "|")
+            :rhyme (inner-type "//" "//")
+            :note (inner-type "{" "}")
+            :lg (multi-chunk-type [])}
         txt-w-cesure  (apply str
-                        (map #(inner-to-text % tt)
+                        (map #(elem-to-text % tt)
                           ["my "
                            {:tag :caesura :attrs {} :content []}
-                           "verse"]))
-        nested-note (inner-to-text
-                      {:tag :lg
-                       :attrs {}
-                       :content ["My "
-                                 {:tag :note
-                                  :attrs {}
-                                  :content ["annotated"]}
-                                 " verse"]}
-                      {:note {:type :inner
-                              :begin-token "{"
-                              :end-token "}"}})]
+                           "verse"]))]
     (is (string? txt-w-cesure) "if this is not a string, big trouble")
-    (is (= txt-w-cesure "my |verse") "text around empty element")
-    (is (= nested-note "My {annotated} verse"))))
+    (is (= txt-w-cesure "my |verse") "text around empty element")))
 
 (deftest test-chunk-to-text
   "output gmarkup from l (verse line) element"
@@ -50,14 +34,11 @@
                    :content ["My "
                              {:tag :caesura :attrs {} :content []}
                              "cesure"]}
-        tt  {:l {:type :chunk
-                             :line-token "-"}
-                         :lg {:type :multi-chunk}
-                         :caesura {:type :empty
-                                   :begin-token "|"
-                                   :end-token "|"}}
-        nested-cesure (chunk-to-text base-elem tt true)
-        nested-cesure-2 (chunk-to-text base-elem tt)]
+        tt  {:l (chunk-type [:caesura] "-")
+             :lg (multi-chunk-type [:l])
+             :caesura (empty-type "|")}
+        nested-cesure (elem-to-text base-elem tt)
+        nested-cesure-2 (elem-to-text base-elem tt)]
     (is (= nested-cesure "\n- My |cesure")
       "Insert empty sub tag (from multi-chunk)")
     (is (= nested-cesure-2 "My |cesure")
@@ -70,39 +51,41 @@
             :content
             [{:tag :l
               :attrs {}
-              :content ["My verse"]}]}
-        parsed  (multi-chunk-to-text mc
-                  {:lg {:type :multi-chunk}
-                   :l {:type :chunk
-                       :line-token "-"}})]
-    (is (= parsed "\n\n- My verse\n") "Simple multi-chunk-to-text")))
+              :content ["My verse"]}
+             {:tag :l
+              :attrs {}
+              :content ["Another line"]}]}
+        nested-note {:tag :lg
+                     :attrs {}
+                     :content ["My "
+                               {:tag :note
+                                :attrs {}
+                                :content ["annotated"]}
+                               " verse"]}
+        tt {:lg (multi-chunk-type [:l])
+            :l (chunk-type [:caesura] "-")
+            :note (inner-type "{" "}")}
+        parsed  (elem-to-text mc tt)]
+    (is (= parsed "\n\n- My verse\n- Another line\n\n")
+      "Simple multi-chunk-to-text")))
+;;;     (is (= nested-note "My {annotated} verse"))
 
 
 (deftest test-description-to-tagtypes
-  (let [tt (tagtypes {:body {:type :container
-                             :contains [:div]}
-                      :rhyme {:type :inner
-                              :contains []
-                              :begin-token "\\"
-                              :end-token "\\"}})]
+  (let [tt {:body (container-type [:div])
+            :rhyme (inner-type "//" "//")}]
     (is (map? tt))
     (is (contains? tt :body))
     (is (contains? tt :rhyme))))
 
 
 (deftest elem-to-text-test
-  (let [tt {:lg {:type :multi-chunk}
-            :l {:type :chunk
-                :line-token "-"}
-            :caesura {:type :empty
-                      :begin-token "|"
-                      :end-token "|"}
-            :note {:type :inner
-                   :begin-token "{"
-                   :end-token "}"}
-            :rhyme {:type :inner
-                    :begin-token "//"
-                    :end-token "//"}}]
+  (let [tt
+        {:l (chunk-type [:caesura] "-")
+         :lg (multi-chunk-type [:l])
+         :caesura (empty-type "|")
+         :note (inner-type "{" "}")
+         :rhyme (inner-type "//" "//")}]
     (is (= "strang" (elem-to-text "strang" tt)) "text is just text")
     (is (= "my verse" (elem-to-text {:tag :l :attrs {} :content ["my verse"]} tt))
       "Chunk with just text content")
