@@ -39,8 +39,6 @@
              :caesura (empty-type "|")}
         nested-cesure (elem-to-text base-elem tt)
         nested-cesure-2 (elem-to-text base-elem tt)]
-    (is (= nested-cesure "\n- My |cesure")
-      "Insert empty sub tag (from multi-chunk)")
     (is (= nested-cesure-2 "My |cesure")
       "Insert empty sub tag (not from multi-chunk)")))
 
