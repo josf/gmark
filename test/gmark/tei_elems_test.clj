@@ -52,7 +52,8 @@
               :content ["My verse"]}
              {:tag :l
               :attrs {}
-              :content ["Another line"]}]}
+              :content ["Another line"]}
+             "random string"]}
         nested-note {:tag :lg
                      :attrs {}
                      :content ["My "

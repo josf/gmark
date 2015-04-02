@@ -129,7 +129,10 @@
 
 (defn multi-chunk-to-text [etype elem tagtypes]
   (str "\n"
-    (apply str (map #(child-chunk-to-text % tagtypes) (:content elem)))
+    (apply str
+      (map
+        #(child-chunk-to-text % tagtypes)
+        (filter map? (:content elem))))
     "\n\n"))
 
 (defn elem-to-text [elem tagtypes]
