@@ -81,25 +81,31 @@
         ;; double line breaks between groups: is this desirable?
         ;; in multi-chunk context
         txt3 "- line one\n\n- line two\n- line three"
+        ;; leading newlines
+        txt4 "\n- line one\n- line two\n- line three"
+        
         chunked (chunk-group-tokenize txt ["-"])
         chunked2 (chunk-group-tokenize txt2 ["-"])
-        chunked3 (chunk-group-tokenize txt3 ["-"])]
+        chunked3 (chunk-group-tokenize txt3 ["-"])
+        chunked4 (chunk-group-tokenize txt4 ["-"])]
     (is (= 3 (count chunked)))
     (is (= (first chunked) "- line one"))
     (is (= (nth chunked 2) "- line three"))
     (is (= 4 (count chunked2)))
     (is (= 3 (count chunked3)))
-    (is (= (second chunked3) "- line two"))))
+    (is (= (second chunked3) "- line two"))
+    (is (= 3 (count chunked4)) "chunk-group-tokenize w leading spaces")))
 
 (deftest identify-chunk-type-test
-  (is :l (identify-chunk-type "- bloop" [["-" :l]]))
-  (is :l (identify-chunk-type "- bloop" [["**" :head] ["-" :l]]))
-  (is :head (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
+  (is (= :l (identify-chunk-type "- bloop" [["-" :l]])))
+  (is (= :l (identify-chunk-type "- bloop" [["**" :head] ["-" :l]])))
+  (is (= :head (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
+  (is (nil? (identify-chunk-type "~ bloop" [["**" :head] ["-" :l]]) )))
 
 (deftest parse-chunk-group-simple-test
   (let [parent {:tag :bogus :attrs {} :content []}
         text "- line //one//\n- line two\n- line three"
-        line-starts-elems {"-" {:tag  :l}}
+        line-starts-elems {"-" :l}
         token-map {"//" {:tag :rhyme :closing-tag "//"}}
         parsed (parse-chunk-group parent text line-starts-elems token-map)]
     (is (map? parsed))
