@@ -97,9 +97,9 @@
     (is (= 3 (count chunked4)) "chunk-group-tokenize w leading spaces")))
 
 (deftest identify-chunk-type-test
-  (is (= :l (identify-chunk-type "- bloop" [["-" :l]])))
-  (is (= :l (identify-chunk-type "- bloop" [["**" :head] ["-" :l]])))
-  (is (= :head (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
+  (is (= ["-" :l] (identify-chunk-type "- bloop" [["-" :l]])))
+  (is (= ["-" :l] (identify-chunk-type "- bloop" [["**" :head] ["-" :l]])))
+  (is (= ["**" :head] (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
   (is (nil? (identify-chunk-type "~ bloop" [["**" :head] ["-" :l]]) )))
 
 (deftest parse-chunk-group-simple-test

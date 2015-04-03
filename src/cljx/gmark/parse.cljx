@@ -147,17 +147,17 @@
 
 
 (defn identify-chunk-type [chunk sorted-line-end-pairs]
+  "Returns a vector containing the line beginning string and the
+  corresponding element type."
   (first
-    (keep
-      (fn [[line-end elem-kw]]
-        (when
-         (and
-           (> (count chunk) (count line-end))
-           (=
-             (str line-end " ")
-             (subs chunk 0 (inc (count line-end)))))
-         elem-kw))
-      sorted-line-end-pairs)))
+   (filter
+     (fn [[line-end elem-kw]]
+       (and
+         (> (count chunk) (count line-end))
+         (=
+           (str line-end " ")
+           (subs chunk 0 (inc (count line-end))))))
+     sorted-line-end-pairs)))
 
 (defn parse-chunk-group [parent text line-starts-elems token-map]
   "line-starts-elems is a map of line-start strings to element type
@@ -168,7 +168,8 @@
      (mapv
 
        (fn [chunk]
-         (let [chunk-tag (identify-chunk-type chunk sorted-line-end-pairs)]
+         (let [[line-end chunk-tag]
+               (identify-chunk-type chunk sorted-line-end-pairs)]
            (when (nil? chunk-tag)
              (throw (#+clj IllegalStateException.
                       #+cljs js/Error.
