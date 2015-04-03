@@ -102,6 +102,13 @@
   (is (= ["**" :head] (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
   (is (nil? (identify-chunk-type "~ bloop" [["**" :head] ["-" :l]]) )))
 
+
+(deftest chunk-remove-line-start-test
+  (is (= "text" (chunk-remove-line-start "- text" "-"))
+    "Remove leading line-start")
+  (is (= "text" (chunk-remove-line-start "text" "-"))
+    "No linestart match, return orig text"))
+
 (deftest parse-chunk-group-simple-test
   (let [parent {:tag :bogus :attrs {} :content []}
         text "- line //one//\n- line two\n- line three"

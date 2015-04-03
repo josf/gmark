@@ -136,6 +136,17 @@
           (map #(str "(?=\\n" (pre-clean-regex %) "\\s+)") line-starts)
           "\n\n")))))
 
+
+(defn chunk-remove-line-start [chunk line-start]
+  "Trim leading line start from a chunk string. If not found, just
+  returns the original string. (This might be important for paragraph
+  elements that don't have a line-start string.)"
+  (let [ls-len (inc (count line-start))] ; inc b/c of extra space
+    (if (= (str line-start " ") (subs chunk 0 ls-len))
+      (subs chunk ls-len)
+      chunk)))
+
+
 (defn chunk-group-tokenize [text line-starts]
   "line-starts is a list of possible line beginning marker
   strings. With an empty list, defaults to '\n\n', meaning simple
@@ -175,7 +186,7 @@
                       #+cljs js/Error.
                       (str "null chunk-tag: " (apply str sorted-line-end-pairs)))))
            (parse-chunk
-             chunk
+             (chunk-remove-line-start chunk line-end)
              token-map
              {:tag chunk-tag :attrs {} :content []})))
 
