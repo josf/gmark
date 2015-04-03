@@ -1,6 +1,6 @@
 (ns gmark.tei-elems)
 
-(defrecord ContainerEType [contains options])
+(defrecord ContainerEType [contains])
 (defrecord ChunkEType [contains line-start options])
 (defrecord MultiChunkEType [contains options])
 
