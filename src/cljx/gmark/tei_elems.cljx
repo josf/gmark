@@ -147,6 +147,22 @@ elements. "
     (map (fn [[tag etype]] (as-token-mapval etype tag)))
     (into {})))
 
+;;; Function for dealing with attributes
+
+(defn attributes-to-text [attrs]
+  "Given a map of attributes, returns a string formatted like this: 
+
+#[attr1:val1::attr2:val2]"
+  (if (empty? attrs)
+    ""
+    (apply str
+      (concat ["#["]
+        (interpose "::"
+          (map (fn [[att val]]
+                 (str (name att) ":" val))
+            attrs))
+        ["]"]))))
+
 (defn inner-to-text
   [etype elem tagtypes]
   (str (begin-text etype)
