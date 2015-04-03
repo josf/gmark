@@ -1,12 +1,12 @@
 (ns gmark.tei-elems)
 
-(defrecord ContainerEType [contains])
-(defrecord ChunkEType [contains line-start])
-(defrecord MultiChunkEType [contains])
+(defrecord ContainerEType [contains options])
+(defrecord ChunkEType [contains line-start options])
+(defrecord MultiChunkEType [contains options])
 
 ;;; no contains: what it can contain is determined by parent type
-(defrecord InnerEType [begin end])      
-(defrecord EmptyEType [sym])
+(defrecord InnerEType [begin end options])      
+(defrecord EmptyEType [sym options])
 
 (defprotocol EditableType
   (text-edit-as-child? [etype])
@@ -40,6 +40,7 @@
 (defprotocol TextType
   (begin-text [etype])
   (end-text [etype])
+  (attribute-default [etype])
   (to-gmark [etype elem tagtypes]))
 
 (defprotocol SubChunkType
@@ -47,12 +48,17 @@
 
 (declare inner-to-text chunk-to-text multi-chunk-to-text)
 
-
+(defn att-default [etype]
+  (if-let [d-a (get-in etype [:options :attribute-default])]
+      d-a
+      (throw (#+cljs js/Error. #+clj IllegalStateException.
+               "No default attribute defined"))))
 
 (extend-type InnerEType
   TextType
   (begin-text [etype] (:begin etype))
   (end-text [etype] (:end etype))
+  (attribute-default [etype] (att-default etype))
   (to-gmark [etype elem tagtypes] (inner-to-text etype elem tagtypes))
   SubChunkType
   (as-token-mapval [etype tag] [(begin-text etype)
@@ -63,6 +69,7 @@
   TextType
   (begin-text [_] "\n")
   (end-text [_] "\n\n")
+  (attribute-default [etype] (att-default etype))
   (to-gmark [etype elem tagtypes] (multi-chunk-to-text etype elem tagtypes)))
 
 (extend-type ChunkEType
@@ -175,13 +182,8 @@ elements. "
     (nil? elem)  nil
     (string? elem) elem
 
-    ;; TODO all of this logic needs to use MultiChunkEType, InnerEType etc.)
     (contains? tagtypes (:tag elem))
     (let [elem-type ((:tag elem) tagtypes)]
-
-      ;; TODO this is a mess! Should the element itself be an
-      ;; additional argument to the to-gmark methods? Or should
-      ;; elements "know" what kind of tagtype they are? THINK, man!
       (to-gmark elem-type elem tagtypes))
 
     true
