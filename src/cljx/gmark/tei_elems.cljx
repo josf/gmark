@@ -172,7 +172,7 @@ elements. "
           (map (fn [[att val]]
                  (str (name att) ":" val))
             attrs))
-        ["]"]))))
+        ["] "]))))
 
 (defn inner-to-text
   [etype elem tagtypes]

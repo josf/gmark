@@ -127,7 +127,7 @@
 
 (deftest attribute-output-test
   (is (= "" (attributes-to-text {})) "empty attrs = empty string")
-  (is (= "#[attr:value]" (attributes-to-text {:attr "value"}))))
+  (is (= "#[attr:value] " (attributes-to-text {:attr "value"}))))
 
 (deftest attribute-default-on-etypes-test
   (let [ct-w-default (chunk-type [:rhyme] "-" {:attribute-default :n})
