@@ -123,3 +123,29 @@
     (is (= :caesura (:tag (get tm "|"))) "values are maps (empty type)")
     (is (= :rhyme (:tag (get tm "//"))) "values are maps (inner type)")
     (is (= :note (:tag (get tm "{"))) "tag values are present")))
+
+
+(deftest attribute-output-test
+  (is (= "" (attributes-to-text {})) "empty attrs = empty string")
+  (is (= "#[attr:value]" (attributes-to-text {:attr "value"}))))
+
+(deftest attribute-default-on-etypes-test
+  (let [ct-w-default (chunk-type [:rhyme] "-" {:attribute-default :n})
+        ct-wo-default (chunk-type [:rhyme] "*")]
+    (is (= :n (attribute-default ct-w-default)))
+    (is (thrown? IllegalStateException (attribute-default ct-wo-default)))))
+
+
+(deftest elem-to-text-with-attributes
+  (let [tt  {:l (chunk-type [:caesura] "-" {:attribute-default :n})
+             :lg (multi-chunk-type [:l] {:attribute-default :type})
+             :caesura (empty-type "|")
+             :note (inner-type "{" "}")
+             :rhyme (inner-type "//" "//")}
+        l {:tag :l :attrs {:n 1} :content ["yo"]}
+        lg {:tag :lg :attrs {:type :stanza}
+             :content
+             [{:tag :l :attrs {:n 1} :content ["yo"]}
+              {:tag :l :attrs {:n 2} :content ["yo yo"]}]}]
+    (is (= "#[1] yo" (elem-to-text l tt)))
+    ))
