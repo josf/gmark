@@ -78,12 +78,14 @@
   (end-text [etype] (if (pos? (count (:line-start etype)))
                       ""
                       "\n"))
+  (attribute-default [etype] (att-default etype))
   (to-gmark [etype elem tagtypes] (chunk-to-text etype elem tagtypes)))
 
 (extend-type EmptyEType
   TextType
   (begin-text [etype] (:sym etype))
   (end-text [_] nil)
+  (attribute-default [etype] (att-default etype))
   (to-gmark [etype elem _] (begin-text etype))
   SubChunkType
   (as-token-mapval [etype tag] [(begin-text etype)
@@ -91,11 +93,20 @@
                                  :no-content true}]))
 
 (defn container-type [contains] (ContainerEType. contains))
-(defn multi-chunk-type [contains] (MultiChunkEType. contains))
-(defn chunk-type [contains line-start] (ChunkEType. contains line-start))
-(defn inner-type [begin end] (InnerEType. begin end))
-(defn empty-type [sym]  (EmptyEType. sym))
+(defn multi-chunk-type
+  ([contains] (MultiChunkEType. contains {}))
+  ([contains options] (MultiChunkEType. contains options)))
+(defn chunk-type
+  ([contains line-start] (ChunkEType. contains line-start {}))
+  ([contains line-start options] (ChunkEType. contains line-start options)))
+(defn inner-type
+  ([begin end] (InnerEType. begin end {}))
+  ([begin end options] (InnerEType. begin end options)))
+(defn empty-type
+  ([sym]  (EmptyEType. sym {}))
+  ([sym options] (EmptyEType. sym options)))
 
+;;; Functions for dealing with collections of tagtypes
 
 (defn tagdesc-to-type [tagdesc]
   "Takes a map describing an element type and returns the correct type
@@ -165,7 +176,9 @@ elements. "
 
 (defn inner-to-text
   [etype elem tagtypes]
-  (str (begin-text etype)
+  (str
+    (begin-text etype)
+    (attributes-to-text (:attrs elem))
     (apply str (map
                  #(if (string? %)
                     %
