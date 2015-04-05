@@ -126,8 +126,8 @@
 
 
 (deftest attribute-output-test
-  (is (= "" (attributes-to-text {})) "empty attrs = empty string")
-  (is (= "#[attr:value] " (attributes-to-text {:attr "value"}))))
+  (is (= "" (attributes-to-text {} nil)) "empty attrs = empty string")
+  (is (= "#[attr:value] " (attributes-to-text {:attr "value"} nil))))
 
 (deftest attribute-default-on-etypes-test
   (let [ct-w-default (chunk-type [:rhyme] "-" {:attribute-default :n})
@@ -143,9 +143,13 @@
              :note (inner-type "{" "}")
              :rhyme (inner-type "//" "//")}
         l {:tag :l :attrs {:n 1} :content ["yo"]}
+        l-empty  {:tag :l :attrs {} :content ["yo"]}
         lg {:tag :lg :attrs {:type :stanza}
              :content
              [{:tag :l :attrs {:n 1} :content ["yo"]}
-              {:tag :l :attrs {:n 2} :content ["yo yo"]}]}]
+              {:tag :l :attrs {:n 2} :content ["yo yo"]}]}
+        note {:tag :note :attrs {:random 1} :content ["note content"]}]
     (is (= "#[1] yo" (elem-to-text l tt)))
+    (is (= "yo" (elem-to-text l-empty tt)))
+    (is (= "{#[random:1] note content}" (elem-to-text note tt)))
     ))

@@ -41,12 +41,13 @@
   (begin-text [etype])
   (end-text [etype])
   (attribute-default [etype])
+  (attributes-to-gmark [etype attrs])
   (to-gmark [etype elem tagtypes]))
 
 (defprotocol SubChunkType
   (as-token-mapval [etype tag]))
 
-(declare inner-to-text chunk-to-text multi-chunk-to-text)
+(declare inner-to-text chunk-to-text multi-chunk-to-text attributes-to-text)
 
 (defn att-default [etype]
   (if-let [d-a (get-in etype [:options :attribute-default])]
@@ -54,11 +55,30 @@
       (throw (#+cljs js/Error. #+clj IllegalStateException.
                "No default attribute defined"))))
 
+(defn attributes-to-text [attrs default-attribute]
+  "Given a map of attributes, returns a string formatted like this: 
+
+#[attr1:val1::attr2:val2]"
+  (if (empty? attrs)
+    ""
+    (apply str
+      (concat ["#["]
+        (interpose "::"
+          (map (fn [[att val]]
+                 (if (= att default-attribute)
+                   (str val)
+                   (str (name att) ":" val)))
+            attrs))
+        ["] "]))))
+
+
 (extend-type InnerEType
   TextType
   (begin-text [etype] (:begin etype))
   (end-text [etype] (:end etype))
   (attribute-default [etype] (att-default etype))
+  (attributes-to-gmark [etype attrs]
+    (attributes-to-text attrs (get-in etype [:options :attribute-default])))
   (to-gmark [etype elem tagtypes] (inner-to-text etype elem tagtypes))
   SubChunkType
   (as-token-mapval [etype tag] [(begin-text etype)
@@ -79,6 +99,8 @@
                       ""
                       "\n"))
   (attribute-default [etype] (att-default etype))
+  (attributes-to-gmark [etype attrs]
+    (attributes-to-text attrs (get-in etype [:options :attribute-default])))
   (to-gmark [etype elem tagtypes] (chunk-to-text etype elem tagtypes)))
 
 (extend-type EmptyEType
@@ -86,6 +108,8 @@
   (begin-text [etype] (:sym etype))
   (end-text [_] nil)
   (attribute-default [etype] (att-default etype))
+  (attributes-to-gmark [etype attrs]
+    (attributes-to-text attrs (get-in etype [:options :attribute-default])))
   (to-gmark [etype elem _] (begin-text etype))
   SubChunkType
   (as-token-mapval [etype tag] [(begin-text etype)
@@ -160,25 +184,12 @@ elements. "
 
 ;;; Function for dealing with attributes
 
-(defn attributes-to-text [attrs]
-  "Given a map of attributes, returns a string formatted like this: 
-
-#[attr1:val1::attr2:val2]"
-  (if (empty? attrs)
-    ""
-    (apply str
-      (concat ["#["]
-        (interpose "::"
-          (map (fn [[att val]]
-                 (str (name att) ":" val))
-            attrs))
-        ["] "]))))
 
 (defn inner-to-text
   [etype elem tagtypes]
   (str
     (begin-text etype)
-    (attributes-to-text (:attrs elem))
+    (attributes-to-gmark etype (:attrs elem))
     (apply str (map
                  #(if (string? %)
                     %
@@ -189,7 +200,9 @@ elements. "
 (declare elem-to-text)
 (defn chunk-to-text
   [etype elem tagtypes]
-  (str (apply str (map #(elem-to-text % tagtypes) (:content elem)))))
+  (str
+    (attributes-to-gmark etype (:attrs elem))
+    (apply str (map #(elem-to-text % tagtypes) (:content elem)))))
 
 (defn child-chunk-to-text
   "To be called when parsing a multi-chunk. This function is different
