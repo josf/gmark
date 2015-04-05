@@ -129,7 +129,8 @@
   (is (= "" (attributes-to-text {} nil)) "empty attrs = empty string")
   (is (= "#[attr:value] " (attributes-to-text {:attr "value"} nil))
     "string value")
-)
+  (is (= "#[attr:value] " (attributes-to-text {:attr :value} nil))
+    "keyword value"))
 
 (deftest attribute-default-on-etypes-test
   (let [ct-w-default (chunk-type [:rhyme] "-" {:attribute-default :n})

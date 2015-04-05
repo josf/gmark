@@ -65,9 +65,12 @@
       (concat ["#["]
         (interpose "::"
           (map (fn [[att val]]
-                 (if (= att default-attribute)
-                   (str val)
-                   (str (name att) ":" val)))
+                 (let [out-val (if (keyword? val)
+                                 (name val)
+                                 val)]
+                  (if (= att default-attribute)
+                    (str out-val)
+                    (str (name att) ":" out-val))))
             attrs))
         ["] "]))))
 
