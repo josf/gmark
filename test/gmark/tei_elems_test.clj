@@ -147,12 +147,14 @@
              :rhyme (inner-type "//" "//")}
         l {:tag :l :attrs {:n 1} :content ["yo"]}
         l-empty  {:tag :l :attrs {} :content ["yo"]}
+        rhyme {:tag :rhyme :attrs {:label "a"} :content ["word"]}
         lg {:tag :lg :attrs {:type "stanza"}
              :content
              [{:tag :l :attrs {:n 1} :content ["yo"]}
               {:tag :l :attrs {:n 2} :content ["yo yo"]}]}
         note {:tag :note :attrs {:random 1} :content ["note content"]}]
     (is (= "#[1] yo" (elem-to-text l tt)))
+    (is (= "//#[label:a] word//" (elem-to-text rhyme tt)))
     (is (= "yo" (elem-to-text l-empty tt)))
     (is (= "{#[random:1] note content}" (elem-to-text note tt)))
     (is (= "\n\n#[stanza]\n- #[1] yo\n- #[2] yo yo\n\n"
