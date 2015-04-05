@@ -1,4 +1,6 @@
-(ns gmark.tei-elems)
+(ns gmark.tei-elems
+  (:require
+   [clojure.string :as str]))
 
 (defrecord ContainerEType [contains])
 (defrecord ChunkEType [contains line-start options])
@@ -50,10 +52,8 @@
 (declare inner-to-text chunk-to-text multi-chunk-to-text attributes-to-text)
 
 (defn att-default [etype]
-  (if-let [d-a (get-in etype [:options :attribute-default])]
-      d-a
-      (throw (#+cljs js/Error. #+clj IllegalStateException.
-               "No default attribute defined"))))
+  (when-let [d-a (get-in etype [:options :attribute-default])]
+      d-a))
 
 (defn attributes-to-text [attrs default-attribute]
   "Given a map of attributes, returns a string formatted like this: 
@@ -90,6 +90,10 @@
   (begin-text [_] "\n")
   (end-text [_] "\n\n")
   (attribute-default [etype] (att-default etype))
+  (attributes-to-gmark [etype attrs]
+    (let [att-txt (attributes-to-text attrs (attribute-default etype))]
+      (when-not (empty? att-txt)
+        (str "\n" (str/trim att-txt)))))
   (to-gmark [etype elem tagtypes] (multi-chunk-to-text etype elem tagtypes)))
 
 (extend-type ChunkEType
@@ -213,6 +217,7 @@ elements. "
 
 (defn multi-chunk-to-text [etype elem tagtypes]
   (str "\n"
+    (attributes-to-gmark etype (:attrs elem))
     (apply str
       (map
         #(child-chunk-to-text % tagtypes)
