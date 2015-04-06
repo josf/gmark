@@ -16,11 +16,11 @@
   (is (=
         (tokenize "the //stuff// we like"  [["//" "//"]])
         ["the " {:token "//" :type :either} "stuff" {:token "//" :type :either} " we like"])
-    (=
-      (tokenize "the //stuff// we {{like}}" [["//" "//"] ["{{" "}}"]])
-      ["the " {:token "//" :type :either} "stuff"
-       {:token "//" :type :either} " we " {:token "{{" :type :begin} "like"
-       {:token "}}" :type :end}])))
+   (is (=
+       (tokenize "the //stuff// we {{like}}" [["//" "//"] ["{{" "}}"]])
+       ["the " {:token "//" :type :either} "stuff"
+        {:token "//" :type :either} " we " {:token "{{" :type :begin} "like"
+        {:token "}}" :type :end}]))))
 
 (deftest tokenize-knows-about-attributes
   (let [tokens [["//" "//"] ["{{" "}}"]]]
