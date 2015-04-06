@@ -58,7 +58,7 @@
   "tokens is a list of vectors, each containing start and an end
   string. Both must be present, even if start and end tags are
   identical."
-  (let [tokes (sort-token-groups tokens)]
+  (let [tokes (sort-token-groups (conj tokens ["#[" "]"]))]
     (loop [accum []
            s string]
       (if (empty? s)

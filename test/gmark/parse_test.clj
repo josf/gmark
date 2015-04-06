@@ -22,6 +22,14 @@
        {:token "//" :type :either} " we " {:token "{{" :type :begin} "like"
        {:token "}}" :type :end}])))
 
+(deftest tokenize-knows-about-attributes
+  (let [tokens [["//" "//"] ["{{" "}}"]]]
+    (is (=  (tokenize "the //#[goofy:yes] stuff// we like" tokens)
+          ["the " {:token "//" :type :either} {:token "#[" :type :begin}
+           "goofy:yes" {:token "]" :type :end} " stuff" {:token "//" :type :either}
+           " we like"]
+          ))))
+
 (deftest match-by-length-test
   (is (map? (match-by-length "//blah" ["//" "//"])))
   (is (map? (match-by-length "//blah " ["//" "//"])))
