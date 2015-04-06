@@ -189,8 +189,6 @@ elements. "
     (map (fn [[tag etype]] (as-token-mapval etype tag)))
     (into {})))
 
-;;; Function for dealing with attributes
-
 
 (defn inner-to-text
   [etype elem tagtypes]
