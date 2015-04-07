@@ -76,6 +76,35 @@
           (nth (:content structured) 3)))
     (is (= " do" (last (:content structured))))))
 
+(deftest structure-attributes
+  (let [token-map  {"//"
+                    {:tag :em :closing-tag "//"}
+                    "|"
+                    {:tag :caesura :no-content true}}
+        tokenized ["stuff" {:token "//" :type :begin}
+                   {:token "#[" :type :begin} "name:value"
+                   {:token "]" :type :end} "we"
+                   {:token "//" :type :begin} "like "
+                   {:token "|" :type :empty}
+                   {:token "#[" :type :begin} "name:value"
+                   {:token "]" :type :end} " do"]
+        structured (structure
+                     tokenized
+                     {:tag :root :attrs {} :content []}
+                     token-map)]
+    (is (map? structured))
+    (is (= (:tag structured) :root))
+    (is (= "stuff" (first (:content structured))))
+    (is (= {:tag :em
+            :attrs {:name "value"}
+            :content ["we"]} (second (:content structured))))
+    (is (= {:tag :caesura
+            :attrs {:name "value"}
+            :content []}
+          (nth (:content structured) 3)))
+    (is (= " do" (last (:content structured))))))
+
+
 
 (deftest regex-cleaning
   (is (= "\\*\\*" (pre-clean-regex "**")))

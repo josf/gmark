@@ -120,23 +120,35 @@
         token-map)
 
       (and (map? token) (:no-content (get token-map (:token token))))
-      (structure
-        (next tokenized)
-        (assoc root
-          :content (conj
-                     (:content root)
-                     {:tag  (:tag (get token-map (:token token)))
-                      :attrs {}
-                      :content []}))
-        token-map)
+      (let [next-is-attrs? (= "#[" (:token (fnext tokenized)))]
+        (structure
+          (if next-is-attrs?
+            (nnext (nnext tokenized))    ; skip 1) #[ 2) blah:blah 3) ]
+            (next tokenized))
+         (assoc root
+           :content (conj
+                      (:content root)
+                      {:tag  (:tag (get token-map (:token token)))
+                       :attrs (if next-is-attrs?
+                                (att-str-to-map (first (nnext tokenized)))
+                                {})
+                       :content []}))
+         token-map))
 
       (and (map? token) (contains? token :token) (not (:no-content token)))
-      (let [elem-type (get token-map  (:token token))
+      (let [next-is-attrs? (and
+                             (map? (fnext tokenized))
+                             (= "#[" (:token (fnext tokenized))))
+            elem-type (get token-map  (:token token))
             closing-token (:closing-tag elem-type)]
+
         (structure
           (drop-with-first ; avoid the tokens that go to the new element
             #(and (map? %) (= closing-token (:token %)))
-            (next tokenized))
+            (if next-is-attrs?
+              (nnext (nnext tokenized))  ; skip to 4th elem if attrs...
+              (next tokenized)))        ;  ...or just keep going
+          
           (assoc root                  ; same old root element but...
             :content
             (conj                      ;... we append...
@@ -145,11 +157,16 @@
                 (take-while ; the tokens that precede the next closing tag
                   #(not
                      (and (map? %) (= closing-token (:token %))))
-                  (next tokenized))
+                  (if next-is-attrs?
+                    (nnext (nnext tokenized))
+                    (next tokenized)))
                 {:tag (:tag elem-type)
-                 :attrs {}
+                 :attrs (if next-is-attrs?
+                          (att-str-to-map (first (nnext tokenized)))
+                          {})
                  :content []}
                 token-map)))
+          
           token-map)))))
 
 
