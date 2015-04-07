@@ -163,6 +163,21 @@
   (is (= "text" (chunk-remove-line-start "text" "-"))
     "No linestart match, return orig text"))
 
+
+(deftest parse-chunk-simple-test
+  (let [parent {:tag :parent :attrs {} :content []}
+        text "line //#[name:val]with// words"
+        token-map {"//" {:tag :em :closing-tag "//"}}
+        parsed (parse-chunk text token-map parent)]
+    (println "here")
+    (is (map? parsed) "has to return a map")
+    (is (string? (first (:content parsed))) "first element is string")
+    (is (map? (second (:content parsed))) "second element is map")
+    (is (= {:name "val"} (:attrs (second (:content parsed))))
+      "attributes are there")
+    (is (= ["with"] (:content (second (:content parsed))))
+      "content of inner element is correct")))
+
 (deftest parse-chunk-group-simple-test
   (let [parent {:tag :bogus :attrs {} :content []}
         text "- line //one//\n- line two\n- line three"
