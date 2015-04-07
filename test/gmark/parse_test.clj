@@ -15,29 +15,31 @@
 (deftest tokenize-simple
   (is (=
         (tokenize "the //stuff// we like"  [["//" "//"]])
-        ["the " {:token "//" :type :either} "stuff" {:token "//" :type :either} " we like"])
+        ["the " {:token "//" :type :begin} "stuff" {:token "//" :type :end} " we like"])
    (is (=
        (tokenize "the //stuff// we {{like}}" [["//" "//"] ["{{" "}}"]])
-       ["the " {:token "//" :type :either} "stuff"
-        {:token "//" :type :either} " we " {:token "{{" :type :begin} "like"
+       ["the " {:token "//" :type :begin} "stuff"
+        {:token "//" :type :end} " we " {:token "{{" :type :begin} "like"
         {:token "}}" :type :end}]))))
 
 (deftest tokenize-knows-about-attributes
   (let [tokens [["//" "//"] ["{{" "}}"]]]
     (is (=  (tokenize "the //#[goofy:yes] stuff// we like" tokens)
-          ["the " {:token "//" :type :either} {:token "#[" :type :begin}
-           "goofy:yes" {:token "]" :type :end} " stuff" {:token "//" :type :either}
-           " we like"]
-          ))))
+          ["the " {:token "//" :type :begin} {:token "#[" :type :begin}
+           "goofy:yes" {:token "]" :type :end} " stuff" {:token "//" :type :end}
+           " we like"]))
+    (is (= (tokenize "#[blah] and ] bracket" tokens)
+          [{:token "#[" :type :begin} "blah"
+           {:token "]" :type :end} " and ] bracket"]) "dangling closing attr tag")))
 
 (deftest match-by-length-test
-  (is (map? (match-by-length "//blah" ["//" "//"])))
-  (is (map? (match-by-length "//blah " ["//" "//"])))
-  (is (map? (match-by-length "{{blah}}" ["{{" "}}"])))
-  (is (map? (match-by-length "{{blah}} " ["{{" "}}"]))))
+  (is (map? (match-by-length "//blah" ["//" "//"] '())))
+  (is (map? (match-by-length "//blah " ["//" "//"] '())))
+  (is (map? (match-by-length "{{blah}}" ["{{" "}}"] '())))
+  (is (map? (match-by-length "{{blah}} " ["{{" "}}"] '()))))
 
 (deftest match-by-length-test-neg
-  (is (nil? (match-by-length "blah//" ["//" "//"]))))
+  (is (nil? (match-by-length "blah//" ["//" "//"] '()))))
 
 (deftest structure-simple
   (let [token-map  {"//"

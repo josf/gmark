@@ -28,23 +28,27 @@
     token-map))
 
 
-(defn match-by-length [string [token-begin token-end]]
+(defn match-by-length [string [token-begin token-end] possible-ends]
+  {:pre [(list? possible-ends)]}
   "Matches either token-begin or token-end against string. Matching is
   length based in that if a token is n chars long, we just match
   against the first n chars in string. End tokens match only if they
   occur at the end of the string."
   (let [same-toks (= token-begin token-end)]
     (cond
-      (and (>= (count string) (count token-begin))
+      (and
+        (>= (count string) (count token-begin))
         (= token-begin (subs string 0 (count token-begin))))
-      {:token token-begin :type (if same-toks :either :begin)}
+      {:token token-begin
+       :type (if (= token-begin (first possible-ends))
+               :end
+               :begin)}
 
-      (and (>= (count (str/trim string)) (count token-end))
-        (= token-end (subs string 0 (count token-end))))
-      {:token token-end :type :end}
-      
-      true
-      nil)))
+      (and
+        (>= (count (str/trim string)) (count token-end))
+        (= token-end (subs string 0 (count token-end)))
+        (= token-end (first possible-ends)))
+      {:token token-end :type :end})))
 
 (defn char-to-accum [ch accum]
   (if (empty? accum)
@@ -58,14 +62,29 @@
   "tokens is a list of vectors, each containing start and an end
   string. Both must be present, even if start and end tags are
   identical."
-  (let [tokes (sort-token-groups (conj tokens ["#[" "]"]))]
+  (let [tokes (sort-token-groups (conj tokens ["#[" "]"]))
+        begins-to-ends (into {} tokes)]
     (loop [accum []
-           s string]
+           s string
+           possible-ends '()]          ; what would be a valid end tag
       (if (empty? s)
         accum
-        (if-let [match (first (keep #(match-by-length s %) tokes))]
-          (recur (conj accum match) (subs s (count (:token match))))
-          (recur (char-to-accum (first s) accum) (subs s 1)))))))
+        (if-let [match (first (keep
+                                #(match-by-length s % possible-ends)
+                                tokes))]
+          (recur
+            (conj accum match)
+            (subs s (count (:token match)))
+            (if (= :begin (:type match))
+              ;; push corresponding end tag onto possible-ends
+              (conj possible-ends (get begins-to-ends (:token match)))
+              ;; pop matched end tag off of possible-ends 
+              (rest possible-ends)))
+          
+          (recur
+            (char-to-accum (first s) accum)
+            (subs s 1)
+            possible-ends))))))
 
 (defn drop-with-first [pred coll]
   (rest (drop-while (complement pred) coll)))
