@@ -7,10 +7,13 @@
   (let [token-map  {"//" {:tag :em
                           :closing-tag "//"}
                     "{{" {:tag :strong
-                          :closing-tag "}}"}}
+                          :closing-tag "}}"}
+                    "|" {:tag :caesura
+                         :no-content true}}
          result (tokens-from-token-map token-map)] 
     (is (some #(= % ["//" "//"]) result))
-    (is (some #(= % ["{{" "}}"]) result))))
+    (is (some #(= % ["{{" "}}"]) result))
+    (is (some #(= % ["|" nil]) result) "Empty tags are [token nil]")))
 
 (deftest tokenize-simple
   (is (=

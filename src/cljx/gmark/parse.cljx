@@ -23,7 +23,7 @@
     (fn [[start-token info]]
       [start-token
        (if (:no-content info)
-         start-token
+         nil
          (:closing-tag info))])
     token-map))
 
