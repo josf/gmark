@@ -15,12 +15,17 @@
 (deftest tokenize-simple
   (is (=
         (tokenize "the //stuff// we like"  [["//" "//"]])
-        ["the " {:token "//" :type :begin} "stuff" {:token "//" :type :end} " we like"])
-   (is (=
-       (tokenize "the //stuff// we {{like}}" [["//" "//"] ["{{" "}}"]])
-       ["the " {:token "//" :type :begin} "stuff"
-        {:token "//" :type :end} " we " {:token "{{" :type :begin} "like"
-        {:token "}}" :type :end}]))))
+        ["the " {:token "//" :type :begin} "stuff" {:token "//" :type :end} " we like"]))
+  (is (=
+        (tokenize "the //stuff// we {{like}}" [["//" "//"] ["{{" "}}"]])
+        ["the " {:token "//" :type :begin} "stuff"
+         {:token "//" :type :end} " we " {:token "{{" :type :begin} "like"
+         {:token "}}" :type :end}])
+    "Multiple tag possibilities, with closing tags")
+  (is (=
+        (tokenize "a caesura |in the middle" [["|" nil]])
+        ["a caesura " {:token "|" :type :empty} "in the middle"])
+    "Tokenize empty element"))
 
 (deftest tokenize-knows-about-attributes
   (let [tokens [["//" "//"] ["{{" "}}"]]]

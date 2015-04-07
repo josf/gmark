@@ -33,7 +33,8 @@
   "Matches either token-begin or token-end against string. Matching is
   length based in that if a token is n chars long, we just match
   against the first n chars in string. End tokens match only if they
-  occur at the end of the string."
+  occur at the end of the string. Empty elements are represented a nil
+  as their end token."
   (cond
     (and
       (>= (count string) (count token-begin))
@@ -41,7 +42,9 @@
     {:token token-begin
      :type (if (= token-begin (first possible-ends))
              :end
-             :begin)}
+             (if (nil? token-end)
+               :empty
+               :begin))}
 
     (and
       (>= (count (str/trim string)) (count token-end))
