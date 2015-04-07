@@ -88,6 +88,21 @@
             (subs s 1)
             possible-ends))))))
 
+
+(defn att-str-to-map [att-str]
+  "Takes a string of attribute names and val pairs, in the form
+  name1:val1::name2:val2 etc. and returns a map names to values. When
+  no name is supplied, ie. val1::name2:val2 the value is assigned to
+  the gmark-default attribute."
+  (into {}
+    (map
+      #(let [splat  (str/split % #":")]
+         (if (= 2 (count splat))
+           [(keyword (first splat)) (second splat)]
+           [:gmark-default (first splat)]))
+      (str/split att-str #"::"))))
+
+
 (defn drop-with-first [pred coll]
   (rest (drop-while (complement pred) coll)))
 

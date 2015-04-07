@@ -49,6 +49,13 @@
 (deftest match-by-length-test-neg
   (is (nil? (match-by-length "blah//" ["//" "//"] '()))))
 
+
+(deftest att-str-to-map-test
+  (let [attmap (att-str-to-map "singleton::name:val")]
+    (is (map? attmap) "must be a map")
+    (is (= "singleton" (:gmark-default attmap)) "default attribute")
+    (is (= "val" (:name attmap)))))
+
 (deftest structure-simple
   (let [token-map  {"//"
                     {:tag :em :closing-tag "//"}
