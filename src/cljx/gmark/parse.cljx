@@ -34,21 +34,20 @@
   length based in that if a token is n chars long, we just match
   against the first n chars in string. End tokens match only if they
   occur at the end of the string."
-  (let [same-toks (= token-begin token-end)]
-    (cond
-      (and
-        (>= (count string) (count token-begin))
-        (= token-begin (subs string 0 (count token-begin))))
-      {:token token-begin
-       :type (if (= token-begin (first possible-ends))
-               :end
-               :begin)}
+  (cond
+    (and
+      (>= (count string) (count token-begin))
+      (= token-begin (subs string 0 (count token-begin))))
+    {:token token-begin
+     :type (if (= token-begin (first possible-ends))
+             :end
+             :begin)}
 
-      (and
-        (>= (count (str/trim string)) (count token-end))
-        (= token-end (subs string 0 (count token-end)))
-        (= token-end (first possible-ends)))
-      {:token token-end :type :end})))
+    (and
+      (>= (count (str/trim string)) (count token-end))
+      (= token-end (subs string 0 (count token-end)))
+      (= token-end (first possible-ends)))
+    {:token token-end :type :end}))
 
 (defn char-to-accum [ch accum]
   (if (empty? accum)
