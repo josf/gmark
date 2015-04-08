@@ -227,7 +227,10 @@
   "To be called on a chunk that no longer has its line end
   marker. Returns an attribute map (possibly empty) and the initial
   text, minus the attr-string if it was initially present. "
-  (if-let [mtch (re-find #"(?is)^\s*#\[([^]]+)\]\s*(.*)$" chunk)]
+  (if-let [mtch (re-find
+                  #+clj #"(?is)^\s*#\[([^]]+)\]\s*(.*)$"
+                  #+cljs #"^\s*#\[([^\]]+)\]\s*([\s\S]*)$"
+                  chunk)]
     [(att-str-to-map (get mtch 1))  (get mtch 2)]
     [{} chunk]))
 
