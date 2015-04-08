@@ -166,16 +166,20 @@
     "No linestart match, return orig text"))
 
 (deftest check-for-chunk-level-attributes-test
-  (is (= [{} "zook"] (check-for-chunk-level-attributes "zook")) "no attrs")
+  (is (= [{} "zook"] (check-for-chunk-level-attributes "zook"))
+    "no attrs on simple chunk")
   (is (= [{:name "val"} "zook"]
-        (check-for-chunk-level-attributes "#[name:val] zook")) "with attrs"))
+        (check-for-chunk-level-attributes "#[name:val] zook"))
+    "with attrs on simple chunk")
+  (is (= [{:name "val"} "- line1\n- line2\n"]
+        (check-for-chunk-level-attributes "#[name:val]\n- line1\n- line2\n"))
+    "with attrs on multi-chunk"))
 
 (deftest parse-chunk-simple-test
   (let [parent {:tag :parent :attrs {} :content []}
         text "line //#[name:val]with// words"
         token-map {"//" {:tag :em :closing-tag "//"}}
         parsed (parse-chunk text token-map parent)]
-    (println "here")
     (is (map? parsed) "has to return a map")
     (is (string? (first (:content parsed))) "first element is string")
     (is (map? (second (:content parsed))) "second element is map")
@@ -204,7 +208,6 @@
     (is (map? parsed) "if not a map, then big trouble")
 
     (let [line (first (:content parsed))]
-      (println parsed)
       (is (= {:n "1"} (:attrs line)) "attributes should be there"))))
 
 ; "\*\*" :head
