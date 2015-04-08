@@ -223,6 +223,17 @@
            (subs chunk 0 (inc (count line-end))))))
      sorted-line-end-pairs)))
 
+(defn check-for-chunk-level-attributes [chunk]
+  "To be called on a chunk that no longer has its line end
+  marker. Returns an attribute map (possibly empty) and the initial
+  text, minus the attr-string if it was initially present. "
+  (if-let [mtch (re-find #"^\s*#\[([^]]+)\]\s*(.*)" chunk)]
+    [(att-str-to-map (get mtch 1))  (get mtch 2)]
+    [{} chunk]))
+
+
+
+
 (defn parse-chunk-group [parent text line-starts-elems token-map]
   "line-starts-elems is a map of line-start strings to element type
   keywords."
@@ -237,10 +248,15 @@
            (when (nil? chunk-tag)
              (throw (#+clj IllegalStateException.
                       #+cljs js/Error.
-                      (str "null chunk-tag: " (apply str sorted-line-end-pairs)))))
-           (parse-chunk
-             (chunk-remove-line-start chunk line-end)
-             token-map
-             {:tag chunk-tag :attrs {} :content []})))
+                      (str "null chunk-tag: " (str
+                                                (apply str sorted-line-end-pairs)
+                                                " "
+                                                chunk)))))
+           (let [[attrs final-line] (check-for-chunk-level-attributes
+                                      (chunk-remove-line-start chunk line-end))]
+            (parse-chunk
+              final-line
+              token-map
+              {:tag chunk-tag :attrs attrs :content []}))))
 
        (chunk-group-tokenize text (keys line-starts-elems))))))

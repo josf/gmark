@@ -163,6 +163,10 @@
   (is (= "text" (chunk-remove-line-start "text" "-"))
     "No linestart match, return orig text"))
 
+(deftest check-for-chunk-level-attributes-test
+  (is (= [{} "zook"] (check-for-chunk-level-attributes "zook")) "no attrs")
+  (is (= [{:name "val"} "zook"]
+        (check-for-chunk-level-attributes "#[name:val] zook")) "with attrs"))
 
 (deftest parse-chunk-simple-test
   (let [parent {:tag :parent :attrs {} :content []}
@@ -187,5 +191,18 @@
     (is (map? parsed))
     (is (= :l (:tag (first (:content parsed)))))
     (is (= :rhyme (:tag (second (:content (first (:content parsed)))))))))
+
+
+(deftest parse-chunk-group-with-attrs
+  (let [parent {:tag :parent :attrs {} :content []}
+        text "- #[n:1] line\n- #[n:2] line\n"
+        line-starts-elems {"-" :l}
+        token-map {"//" {:tag :rhyme :closing-tag "//"}}
+        parsed (parse-chunk-group parent text line-starts-elems token-map)]
+    (is (map? parsed) "if not a map, then big trouble")
+
+    (let [line (first (:content parsed))]
+      (println parsed)
+      (is (= {:n "1"} (:attrs line)) "attributes should be there"))))
 
 ; "\*\*" :head
