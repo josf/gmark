@@ -153,7 +153,9 @@
 (deftest identify-chunk-type-test
   (is (= ["-" :l] (identify-chunk-type "- bloop" [["-" :l]])))
   (is (= ["-" :l] (identify-chunk-type "- bloop" [["**" :head] ["-" :l]])))
+  (is (= ["-" :l] (identify-chunk-type "- bloop" [["*" :head] ["-" :l]])))
   (is (= ["**" :head] (identify-chunk-type "** zork" [["**" :head] ["-" :l]])))
+  (is (= ["-" :l] (identify-chunk-type "- #[name:val] bloop" [["*" :head] ["-" :l]])))
   (is (nil? (identify-chunk-type "~ bloop" [["**" :head] ["-" :l]]) )))
 
 
